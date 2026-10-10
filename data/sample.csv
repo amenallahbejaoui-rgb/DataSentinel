@@ -1,0 +1,8 @@
+
+customer_id,age,income,city
+1,25,1200,Tunis
+2,32,2500,Sousse
+3,,1800,Tunis
+4,45,9000,Sfax
+4,45,9000,Sfax
+5,29,,Monastir
