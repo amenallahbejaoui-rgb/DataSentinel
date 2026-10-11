@@ -1,0 +1,63 @@
+{
+  "file_name": "pipeline_test.csv",
+  "rows": 4,
+  "columns": 4,
+  "completeness_percentage": 100.0,
+  "duplicate_rows": 0,
+  "column_details": {
+    "customer_id": {
+      "data_type": "int64",
+      "missing_count": 0,
+      "missing_percentage": 0.0,
+      "unique_values": 3
+    },
+    "age": {
+      "data_type": "int64",
+      "missing_count": 0,
+      "missing_percentage": 0.0,
+      "unique_values": 4
+    },
+    "income": {
+      "data_type": "int64",
+      "missing_count": 0,
+      "missing_percentage": 0.0,
+      "unique_values": 4
+    },
+    "city": {
+      "data_type": "str",
+      "missing_count": 0,
+      "missing_percentage": 0.0,
+      "unique_values": 4
+    }
+  },
+  "total_issues": 4,
+  "high_severity_issues": 3,
+  "medium_severity_issues": 1,
+  "anomalous_rows": 0,
+  "issues": [
+    {
+      "type": "non_unique_value",
+      "column": "customer_id",
+      "count": 1,
+      "severity": "high"
+    },
+    {
+      "type": "out_of_range",
+      "column": "age",
+      "count": 2,
+      "severity": "high"
+    },
+    {
+      "type": "out_of_range",
+      "column": "income",
+      "count": 1,
+      "severity": "high"
+    },
+    {
+      "type": "invalid_category",
+      "column": "city",
+      "count": 1,
+      "severity": "medium"
+    }
+  ]
+}
