@@ -1,7 +1,7 @@
 
 import pandas as pd
 
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate
 from sklearn.ensemble import IsolationForest, RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (
@@ -107,3 +107,47 @@ results_df.to_csv("reports/model_comparison.csv", index=False)
 
 print("\nSaved evaluation to reports/model_comparison.csv")
 print(results_df.round(4).to_string(index=False))
+
+# 5-fold cross-validation for Random Forest.
+print("\nRunning 5-fold cross-validation...")
+
+cv = StratifiedKFold(
+    n_splits=5,
+    shuffle=True,
+    random_state=42,
+)
+
+cv_results = cross_validate(
+    RandomForestClassifier(
+        n_estimators=100,
+        class_weight="balanced_subsample",
+        random_state=42,
+        n_jobs=-1,
+    ),
+    X,
+    y,
+    cv=cv,
+    scoring={
+        "precision": "precision",
+        "recall": "recall",
+        "f1": "f1",
+        "average_precision": "average_precision",
+    },
+    n_jobs=1,
+)
+
+for metric in ["precision", "recall", "f1", "average_precision"]:
+    values = cv_results[f"test_{metric}"]
+    print(f"{metric}: {values.mean():.4f} +/- {values.std():.4f}")
+
+# Save each fold's results.
+cv_df = pd.DataFrame({
+    "fold": range(1, 6),
+    "precision": cv_results["test_precision"],
+    "recall": cv_results["test_recall"],
+    "f1_score": cv_results["test_f1"],
+    "average_precision": cv_results["test_average_precision"],
+})
+
+cv_df.to_csv("reports/random_forest_cv.csv", index=False)
+print("Saved cross-validation results to reports/random_forest_cv.csv")
