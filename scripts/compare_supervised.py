@@ -86,3 +86,24 @@ def evaluate(name, predictions, scores):
 
 evaluate("Isolation Forest", iso_predictions, iso_scores)
 evaluate("Random Forest", rf_predictions, rf_scores)
+
+# Save a summary of the evaluation for later comparison.
+results = []
+
+for name, predictions, scores in [
+    ("Isolation Forest", iso_predictions, iso_scores),
+    ("Random Forest", rf_predictions, rf_scores),
+]:
+    results.append({
+        "model": name,
+        "precision": precision_score(y_test, predictions, zero_division=0),
+        "recall": recall_score(y_test, predictions, zero_division=0),
+        "f1_score": f1_score(y_test, predictions, zero_division=0),
+        "average_precision": average_precision_score(y_test, scores),
+    })
+
+results_df = pd.DataFrame(results)
+results_df.to_csv("reports/model_comparison.csv", index=False)
+
+print("\nSaved evaluation to reports/model_comparison.csv")
+print(results_df.round(4).to_string(index=False))
