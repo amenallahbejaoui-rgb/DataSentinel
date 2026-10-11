@@ -1,3 +1,6 @@
 .venv
 *.pyc
 __pycache
+contact-lenses.csv
+data/creditcard.csv
+phpKo8OWT.arff
