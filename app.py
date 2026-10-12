@@ -243,18 +243,22 @@ else:
                 if issues:
                     issue_summary = (
                         pd.DataFrame(issues)
-                        .groupby("type", dropna=False)
-                        .size()
-                        .reset_index(name="Findings")
-                        .rename(columns={"type": "Issue type"})
+                        .groupby("type", dropna=False)["count"]
+                        .sum()
+                        .reset_index()
+                        .rename(columns={
+                            "type": "Issue type",
+                            "count": "Affected records",
+                        })
                     )
+
                     st.dataframe(
                         issue_summary,
                         use_container_width=True,
                         hide_index=True,
                     )
                 else:
-                    st.success("No issues were reported by the pipeline.")
+                    st.success("No issues were reported.")
 
                 st.warning(
                     "Anomaly detection uses Isolation Forest with its current "
