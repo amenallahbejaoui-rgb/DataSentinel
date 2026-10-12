@@ -252,11 +252,7 @@ else:
                         })
                     )
 
-                    st.dataframe(
-                        issue_summary,
-                        use_container_width=True,
-                        hide_index=True,
-                    )
+                    st.table(issue_summary)
                 else:
                     st.success("No issues were reported.")
 
