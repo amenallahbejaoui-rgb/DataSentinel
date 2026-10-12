@@ -241,18 +241,42 @@ else:
                 st.markdown("**Analysis findings**")
 
                 if issues:
-                    issue_summary = (
-                        pd.DataFrame(issues)
-                        .groupby("type", dropna=False)["count"]
-                        .sum()
-                        .reset_index()
-                        .rename(columns={
-                            "type": "Issue type",
-                            "count": "Affected records",
-                        })
-                    )
+                    issue_df = pd.DataFrame(issues)
 
-                    st.table(issue_summary)
+                    if "type" in issue_df.columns and "count" in issue_df.columns:
+                        issue_summary = (
+                            issue_df.groupby("type", dropna=False)["count"]
+                            .sum()
+                            .reset_index()
+                        )
+
+                        issue_summary["Issue type"] = (
+                            issue_summary["type"]
+                            .map({
+                                "anomalous_rows": "Unusual numeric rows",
+                                "duplicate_rows": "Duplicate rows",
+                            })
+                            .fillna(issue_summary["type"])
+                        )
+
+                        issue_summary = issue_summary.rename(
+                            columns={"count": "Reported count"}
+                        )
+                        issue_summary = issue_summary[
+                            ["Issue type", "Reported count"]
+                        ]
+
+                        st.dataframe(
+                            issue_summary,
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+                    else:
+                        st.dataframe(
+                            issue_df,
+                            use_container_width=True,
+                            hide_index=True,
+                        )
                 else:
                     st.success("No issues were reported.")
 
