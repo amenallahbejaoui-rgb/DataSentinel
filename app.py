@@ -66,6 +66,35 @@ def get_issue_count(report, issue_type):
     )
 
 
+def build_issue_summary(issues: list[dict]) -> pd.DataFrame:
+    """Create the stable, user-facing summary shown in the Overview tab."""
+    if not issues:
+        return pd.DataFrame(columns=["Issue type", "Reported count"])
+
+    issue_df = pd.DataFrame(issues)
+    if "type" not in issue_df or "count" not in issue_df:
+        return pd.DataFrame(columns=["Issue type", "Reported count"])
+
+    summary = (
+        issue_df.groupby("type", dropna=False)["count"]
+        .sum()
+        .reset_index()
+    )
+    labels = {
+        "anomalous_rows": "Unusual numeric rows",
+        "duplicate_rows": "Duplicate rows",
+        "missing_values": "Missing values",
+        "missing_column": "Missing columns",
+        "out_of_range": "Out-of-range values",
+        "invalid_category": "Invalid categories",
+        "required_value_missing": "Required values missing",
+        "non_unique_value": "Non-unique values",
+    }
+    summary["Issue type"] = summary["type"].map(labels).fillna(summary["type"])
+    summary = summary.rename(columns={"count": "Reported count"})
+    return summary[["Issue type", "Reported count"]]
+
+
 # Sidebar
 with st.sidebar:
     st.title("🛡️ DataSentinel")
@@ -241,42 +270,7 @@ else:
                 st.markdown("**Analysis findings**")
 
                 if issues:
-                    issue_df = pd.DataFrame(issues)
-
-                    if "type" in issue_df.columns and "count" in issue_df.columns:
-                        issue_summary = (
-                            issue_df.groupby("type", dropna=False)["count"]
-                            .sum()
-                            .reset_index()
-                        )
-
-                        issue_summary["Issue type"] = (
-                            issue_summary["type"]
-                            .map({
-                                "anomalous_rows": "Unusual numeric rows",
-                                "duplicate_rows": "Duplicate rows",
-                            })
-                            .fillna(issue_summary["type"])
-                        )
-
-                        issue_summary = issue_summary.rename(
-                            columns={"count": "Reported count"}
-                        )
-                        issue_summary = issue_summary[
-                            ["Issue type", "Reported count"]
-                        ]
-
-                        st.dataframe(
-                            issue_summary,
-                            use_container_width=True,
-                            hide_index=True,
-                        )
-                    else:
-                        st.dataframe(
-                            issue_df,
-                            use_container_width=True,
-                            hide_index=True,
-                        )
+                    st.table(build_issue_summary(issues))
                 else:
                     st.success("No issues were reported.")
 
@@ -284,6 +278,9 @@ else:
                     "Anomaly detection uses Isolation Forest with its current "
                     "default contamination of 5%. This is a model setting, "
                     "not the confirmed error or fraud rate."
+                )
+                st.caption(
+                    f"Anomaly detection status: {report.get('anomaly_status', 'Unknown')}"
                 )
 
             with issues_tab:
@@ -321,6 +318,32 @@ else:
                     )
                 else:
                     st.success("No issues were reported.")
+
+                anomaly_records = report.get("anomaly_records", [])
+                if anomaly_records:
+                    st.subheader("Flagged records")
+                    st.caption(
+                        "These rows were flagged by Isolation Forest. "
+                        "They are candidates for review, not confirmed errors."
+                    )
+                    anomaly_df = pd.DataFrame(anomaly_records)
+                    st.dataframe(
+                        anomaly_df,
+                        use_container_width=True,
+                        hide_index=True,
+                    )
+                    st.download_button(
+                        "Download flagged records",
+                        data=anomaly_df.to_csv(index=False),
+                        file_name="datasentinel_flagged_records.csv",
+                        mime="text/csv",
+                        use_container_width=True,
+                    )
+                else:
+                    st.info(
+                        "No flagged records are available for this dataset. "
+                        f"{report.get('anomaly_status', '')}"
+                    )
 
             with columns_tab:
                 st.subheader("Column-level profile")

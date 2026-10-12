@@ -17,11 +17,18 @@ def run_quality_pipeline(file_path: str, rules: dict) -> dict:
     all_issues = report["issues"] + rule_issues
 
     anomaly_count = 0
+    anomaly_records = []
+    anomaly_status = "skipped"
 
-    # Run anomaly detection only when enough rows are available.
-    if len(df) >= 5:
+    numeric_columns = df.select_dtypes(include="number").columns
+
+    # Isolation Forest requires at least five rows and one numeric column.
+    if len(df) >= 5 and len(numeric_columns) > 0:
         result = detect_anomalies(df)
-        anomaly_count = int(result["anomaly"].sum())
+        flagged = result[result["anomaly"]].drop(columns=["anomaly"])
+        anomaly_count = len(flagged)
+        anomaly_records = flagged.to_dict(orient="records")
+        anomaly_status = "completed"
 
         if anomaly_count:
             all_issues.append({
@@ -30,6 +37,8 @@ def run_quality_pipeline(file_path: str, rules: dict) -> dict:
                 "count": anomaly_count,
                 "severity": "medium",
             })
+    elif len(df) >= 5:
+        anomaly_status = "skipped"
 
     return {
         "file_name": report["file_name"],
@@ -46,5 +55,7 @@ def run_quality_pipeline(file_path: str, rules: dict) -> dict:
             issue["severity"] == "medium" for issue in all_issues
         ),
         "anomalous_rows": anomaly_count,
+        "anomaly_status": anomaly_status,
+        "anomaly_records": anomaly_records,
         "issues": all_issues,
     }
